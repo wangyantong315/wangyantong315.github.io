@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的第一个小游戏</title>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; color: white; font-family: Arial; }
+        canvas { background: #000; border: 2px solid #555; }
+        #ui { position: absolute; top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>躲避红色方块</h1>
+        <p>分数: <span id="score">0</span></p>
+        <p style="font-size: 12px; color: #aaa;">移动鼠标控制白色方块</p>
+    </div>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+
+    // 游戏状态
+    let score = 0;
+    let isGameOver = false;
+
+    // 玩家 (白色方块)
+    const player = { x: 180, y: 550, width: 30, height: 30, color: 'white' };
+
+    // 敌人 (红色方块数组)
+    const enemies = [];
+    const enemySpeed = 3; 
+
+    // 鼠标监听
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        player.x = e.clientX - rect.left - player.width / 2;
+    });
+
+    // 游戏主循环
+    function gameLoop() {
+        if (isGameOver) {
+            ctx.fillStyle = 'white';
+            ctx.font = '30px Arial';
+            ctx.fillText("游戏结束!", 130, 300);
+            ctx.font = '16px Arial';
+            ctx.fillText("按 F5 刷新重来", 145, 330);
+            return;
+        }
+
+        // 1. 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 2. 生成敌人 (每隔60帧生成一个)
+        if (Math.random() < 0.02) {
+            enemies.push({
+                x: Math.random() * (canvas.width - 30),
+                y: -30,
+                width: 30,
+                height: 30,
+                color: 'red'
+            });
+        }
+
+        // 3. 绘制和移动敌人
+        for (let i = 0; i < enemies.length; i++) {
+            let e = enemies[i];
+            e.y += enemySpeed;
+            ctx.fillStyle = e.color;
+            ctx.fillRect(e.x, e.y, e.width, e.height);
+
+            // 碰撞检测
+            if (
+                player.x < e.x + e.width &&
+                player.x + player.width > e.x &&
+                player.y < e.y + e.height &&
+                player.y + player.height > e.y
+            ) {
+                isGameOver = true;
+            }
+
+            // 超出屏幕移除并加分
+            if (e.y > canvas.height) {
+                enemies.splice(i, 1);
+                i--;
+                score++;
+                scoreEl.innerText = score;
+            }
+        }
+
+        // 4. 绘制玩家
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // 启动游戏
+    gameLoop();
+</script>
+
+</body>
+</html>
